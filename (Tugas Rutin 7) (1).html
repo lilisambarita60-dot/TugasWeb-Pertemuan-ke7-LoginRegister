@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pratinjau Login/Register</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--primary:#4f46e5;--danger:#dc2626;--okb:#dcfce7;--okt:#166534;--errb:#fee2e2;--errt:#991b1b;--border:#cbd5e1}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f172a;--card:#1e293b;--text:#f1f5f9;--muted:#94a3b8;--border:#475569;--okb:#14532d;--okt:#bbf7d0;--errb:#7f1d1d;--errt:#fecaca}}
+:root[data-theme="dark"]{--bg:#0f172a;--card:#1e293b;--text:#f1f5f9;--muted:#94a3b8;--border:#475569;--okb:#14532d;--okt:#bbf7d0;--errb:#7f1d1d;--errt:#fecaca}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:16px}
+.note{max-width:420px;margin:0 auto 12px;font-size:.8rem;color:var(--muted);text-align:center}
+.card{max-width:420px;margin:0 auto;background:var(--card);padding:28px 24px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.1)}
+h1{margin:0 0 18px;font-size:1.5rem}
+label{display:block;margin:14px 0 6px;font-size:.9rem;font-weight:600}
+input[type=text],input[type=email],input[type=password]{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;font-size:1rem;background:var(--card);color:var(--text)}
+.check{display:flex;align-items:center;gap:8px;font-weight:400}
+button,.btn{display:inline-block;width:100%;margin-top:20px;padding:12px;border:0;border-radius:8px;background:var(--primary);color:#fff;font-size:1rem;font-weight:600;cursor:pointer;text-align:center}
+.btn.danger{background:var(--danger)}
+.alert{padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:.92rem}
+.alert ul{margin:0;padding-left:18px}
+.error{background:var(--errb);color:var(--errt)}
+.success{background:var(--okb);color:var(--okt)}
+.muted{margin-top:18px;text-align:center;color:var(--muted);font-size:.92rem}
+a{color:var(--primary);cursor:pointer;text-decoration:underline}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:8px 0;border-bottom:1px solid var(--border);font-size:.92rem}
+th{width:35%;color:var(--muted)}
+</style>
+</head>
+<body>
+<p class="note">Pratinjau tampilan (simulasi JavaScript). Kode PHP asli ada di file terpisah.</p>
+<div class="card" id="app"></div>
+<script>
+var users=[],session=null,flash=null,view='login';
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function go(v){view=v;render()}
+function alertBox(f){return f?'<div class="alert '+f.type+'">'+(Array.isArray(f.msg)?'<ul>'+f.msg.map(function(m){return '<li>'+esc(m)+'</li>'}).join('')+'</ul>':esc(f.msg))+'</div>':''}
+function render(){
+ var a=document.getElementById('app'),f=flash;flash=null;
+ if(view==='dashboard'&&!session){view='login';f={type:'error',msg:'Silakan login terlebih dahulu.'}}
+ if(view==='register'){
+  a.innerHTML='<h1>Buat Akun</h1>'+alertBox(f)+'<label>Nama</label><input type="text" id="n"><label>Email</label><input type="email" id="e"><label>Password</label><input type="password" id="p"><label>Konfirmasi Password</label><input type="password" id="k"><button onclick="reg()">Daftar</button><p class="muted">Sudah punya akun? <a onclick="go(\'login\')">Login</a></p>';
+ }else if(view==='login'){
+  a.innerHTML='<h1>Login</h1>'+alertBox(f)+'<label>Email</label><input type="email" id="e"><label>Password</label><input type="password" id="p"><label class="check"><input type="checkbox"> Ingat saya (30 hari)</label><button onclick="login()">Masuk</button><p class="muted">Belum punya akun? <a onclick="go(\'register\')">Daftar</a></p>';
+ }else{
+  a.innerHTML='<h1>Dashboard</h1>'+alertBox(f)+'<p>Selamat datang, <strong>'+esc(session.nama)+'</strong>!</p><table><tr><th>Email</th><td>'+esc(session.email)+'</td></tr><tr><th>Terdaftar</th><td>'+esc(session.at)+'</td></tr></table><button class="btn danger" onclick="logout()">Logout</button>';
+ }
+}
+function v(id){return document.getElementById(id).value}
+function reg(){
+ var n=v('n').trim(),e=v('e').trim(),p=v('p'),k=v('k'),er=[];
+ if(!n)er.push('Nama wajib diisi.');else if(n.length<3)er.push('Nama minimal 3 karakter.');
+ if(!e)er.push('Email wajib diisi.');else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))er.push('Format email tidak valid.');
+ if(!p)er.push('Password wajib diisi.');else if(p.length<8)er.push('Password minimal 8 karakter.');else if(!/[A-Za-z]/.test(p)||!/\d/.test(p))er.push('Password harus mengandung huruf dan angka.');
+ if(p!==k)er.push('Konfirmasi password tidak cocok.');
+ if(!er.length&&users.some(function(u){return u.email.toLowerCase()===e.toLowerCase()}))er.push('Email sudah terdaftar. Silakan login.');
+ if(er.length){flash={type:'error',msg:er};render();return}
+ users.push({nama:n,email:e,pw:p,at:new Date().toISOString().slice(0,19).replace('T',' ')});
+ flash={type:'success',msg:'Registrasi berhasil! Silakan login.'};go('login');
+}
+function login(){
+ var e=v('e').trim(),p=v('p');
+ var u=users.find(function(x){return x.email.toLowerCase()===e.toLowerCase()&&x.pw===p});
+ if(!e||!p){flash={type:'error',msg:'Email dan password wajib diisi.'};render();return}
+ if(!u){flash={type:'error',msg:'Email atau password salah!'};render();return}
+ session=u;go('dashboard');
+}
+function logout(){session=null;flash={type:'success',msg:'Anda berhasil logout.'};go('login')}
+render();
+</script>
+</body>
+</html>
